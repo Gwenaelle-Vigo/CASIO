@@ -1,0 +1,54 @@
+# Configuration file for Combining Annotation Software to Identify Orthologous gene (CASIO) snakemake workflow
+
+### Define Directory for inputs and outputs
+
+# Directory with inside genomes to analyse at format Genus_species.fasta (Format must respect the case at Genus and must end by fasta). 
+# File must be uncompress
+assemblies_dir: "Data/Genome/"
+
+# Directory with Queries (Good quality genome with an annotation). The directory contains Genus_species.fasta and Genus_species.gff. (Format must respect the case at Genus and must end by fasta/gff)
+# File must be uncompress
+queries_dir: "Data/Query/"
+
+# Protein database for braker. Braker recommend to use ortho db (reference protein sequences) available here https://bioinf.uni-greifswald.de/bioinf/partitioned_odb11/ or https://bioinf.uni-greifswald.de/bioinf/partitioned_odb12/
+# In case of CASIO on Lepidoptera genome we download Arthropoda.fa.gz (https://bioinf.uni-greifswald.de/bioinf/partitioned_odb12/Arthropoda.fa.gz)
+protein_dir: "Data/Protein_Database/"
+
+# Directory where results will be write. The directory will be create automatically.
+results_dir: "Results/CASIO/"
+
+
+
+
+
+
+### Define parameters about the pipeline
+
+# Tools to do annotation separate by a ",". The tool order will determine how you trust in the tool and which orthogroup you select to determine new combine Orthogroup (OGA) at the end to create profile hmm.
+# Possible annotations tools are Busco, Braker, Miniprot and Scipio.
+# For exemple, to do annotation only with Busco and Miniprot set annotation_tools: "Busco, Miniprot"
+annotation_tools: "Busco, Braker, Miniprot, Scipio"
+
+# Braker option : Set a file containing the information about genome(s) for which you want to skip the masking step. 
+# By default Masking step is done on all genome (of assemblies_dir), because no file are set. To skip masking step on one or several genome write in a file all genome (Genus_species) for which you want to skip the masking step. Set this file as skip_masking_step parameter.
+# i.e  skip_masking_step: "Data/Genome_already_mask.txt",
+# With write in Data/Genome_already_mask.txt one genome by line i.e "Baraonia_brevicornis\nGraphium_agamemnon\n". This will skip masking step for genome Baraonia_brevicornis.fasta and Graphium_agamemnon.fasta
+skip_masking_step: "" # Data/Genome_already_mask.txt
+
+# Minimum length (in bp) of Contigs/Chromosomes in species/genome to annotate. This avoid bugs on too fragmented genome by removing short contigs/chromosomes of the fasta genome set in assemblies_dir.
+minLenContigs: 10000
+
+# Minimum length of annotate CDS (in bp). Shorter CDS will be filter
+minLenCDS: 30
+
+# The orthology dabase use by Busco.
+lineage_dataset_busco: "papilionoidea_odb12"
+
+# Orthofinder define tree inference method
+orthofinder_method: "fasttree" # Possible option : fasttree, raxml, raxml-ng, iqtree
+
+# Minimum number of species with orthologous genes 1:1. At the end of orthofinder only orthogroup with {min_sp_ortholog} species with 1 genes will be keep
+min_sp_ortholog: 5 # Needs orthogroup with no paralog and orthologous gene in at least X species
+
+# Filter orthologous genes on : ALL (GENOME+QUERY) or GENOME only : Recommend ALL
+orthogroup_gene: "ALL" # GENOME to verify 1:1 only on genome; ALL to verify on Genome + Query : The value of gene have to be 1 or 0 for genome + query
