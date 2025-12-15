@@ -16,17 +16,20 @@ echo -e "\n"
 echo "Download apptainer image in appropriate Container directory :"
 echo -e "\n"
 echo -e "Downloading Busco image :\n"
-wget https://cloud.isem-evolution.fr/nextcloud/index.php/s/55NHzLwoynfz2Wy/download/Busco.sif -O Container/Busco/Busco.sif
+wget https://data.indores.fr:443/api/access/datafile/31134 -O Container/Busco/Busco.sif
 echo -e "\n"
 echo -e "Downloading masking Tool image :\n"
-wget https://cloud.isem-evolution.fr/nextcloud/index.php/s/8HqJMTLaGNEnoNT/download/repeatM.sif -O Container/Braker/repeatM.sif
+wget https://data.indores.fr:443/api/access/datafile/31133 -O Container/Braker/repeatM.sif
 echo -e "\n"
 echo -e "Downloading Miniprot and Scipio image :\n"
-wget https://cloud.isem-evolution.fr/nextcloud/index.php/s/CZ73RmQZ6rBWKNH/download/miniprot_scipio.sif -O Container/Miniprot_Scipio/miniprot_scipio.sif
+wget https://data.indores.fr:443/api/access/datafile/31132 -O Container/Miniprot_Scipio/miniprot_scipio.sif
 echo -e "\n"
 echo -e "Downloading Orthology and cleaing tools image :\n"
-wget https://cloud.isem-evolution.fr/nextcloud/index.php/s/RqbBcTraJ9bbABb/download/cleaning_orthology.sif -O Container/Cleaning/cleaning_orthology.sif
+wget https://data.indores.fr:443/api/access/datafile/31131 -O Container/Cleaning/cleaning_orthology.sif
 
+echo -e "\n"
+echo "Ensure that the apptainer image download was completed successfully."
+md5sum -c checkmd5sum.md5
 echo -e "\n\n\n"
 
 echo "#################### Prepare working directory for CASIO pipeline :"
