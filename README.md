@@ -1,4 +1,4 @@
-# Pipeline for the Creation of an Orthologous Gene Database 
+# CASIO (Combining Annotation Software to Identify Orthologous genes)  
 (An example of an application to the Papilionidae family)
 
 ## 1) Genome Annotation
