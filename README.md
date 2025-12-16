@@ -2,13 +2,13 @@
 
 ------------------------------------------------------------------------
 
-## DESCRIPTION
+## Description
 
 **CASIO (Combining Annotation Software to Identify Orthologous genes)** is an automated and containerized bioinformatics workflow designed to identify, filter, and curate sets of orthologous genes from genome assemblies. CASIO integrates multiple complementary gene annotation strategies, including *ab initio* gene prediction with BRAKER2 (), homology-based annotation, and protein-to-genome alignment approaches implemented in Miniprot (Li 2023) and Scipio (Keller et al. 2008), while BUSCO (Manni et al. 2021) is used to retrieve conserved orthologous genes, in order to maximize ortholog recovery. The workflow harmonizes outputs from different annotation tools by standardizing formats, removing short or redundant sequences, filtering alternative isoforms and paralogs, and retaining only reliable orthologous groups. CASIO relies on OrthoFinder (Emms & Kelly 2015) for orthogroup inference and provides downstream steps for sequence alignment with MACSE (Ranwez et al. 2018), alignment cleaning with HMMCleaner (Di Franco et al. 2019) and PhylteR (Comte et al. 2023), and quality assessment. Implemented in Snakemake and distributed as a fully self-contained container, CASIO ensures reproducibility, scalability, and ease of deployment across computational environments. Its modular design allows users to customize annotation methods, filtering thresholds, and ortholog selection criteria through a simple configuration file, making CASIO adaptable to diverse taxonomic groups and research objectives in comparative genomics and phylogenomics.
 
 ------------------------------------------------------------------------
 
-## INSTALLATION
+## Installation
 
 CASIO can be installed using the provided installation script, which automatically sets up all required components.
 
@@ -29,7 +29,7 @@ The installation process will download and configure all necessary dependencies 
 
 ------------------------------------------------------------------------
 
-## USAGE
+## Usage
 
 CASIO is executed through a Snakemake workflow and is fully controlled via a configuration file. This design allows users to customize each step of the pipeline while ensuring full reproducibility.
 
@@ -51,7 +51,7 @@ Once the configuration file is set, run the pipeline from the CASIO directory us
 ```bash
 snakemake -s Database_OG.smk --configfile configparam.yaml --cores <N> --use-singularity --singularity-args
 ```
-Replace <N> with the number of CPU cores to allocate.
+Replace `<N>` with the number of CPU cores to allocate.
 
 If the directory containing the input data is located outside the CASIO working directory, add the following option: `-B /path/to/data_directory/`, replacing the path with the appropriate location of your data directory.
 
@@ -73,7 +73,7 @@ CASIO is distributed as a containerized Snakemake workflow. All software depende
 
 ------------------------------------------------------------------------
 
-## Reference of software used
+## References of software used
 
 Eddy SR. 2011. Accelerated Profile HMM Searches. PLoS Comput. Biol. 7:e1002195. doi: 10.1371/journal.pcbi.1002195.
 
