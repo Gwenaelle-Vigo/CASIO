@@ -49,7 +49,7 @@ Before running CASIO, edit the configuration file (`configparam.yaml`) to define
 Once the configuration file is set, run the pipeline from the CASIO directory using Snakemake:
 
 ```bash
-snakemake -s Database_OG.smk --configfile configparam.yaml --cores <N> --use-singularity --singularity-args
+snakemake -s CASIO.smk --configfile configparam.yaml --cores <N> --use-singularity --singularity-args
 ```
 Replace `<N>` with the number of CPU cores to allocate.
 
