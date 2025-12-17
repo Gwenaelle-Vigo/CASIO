@@ -760,9 +760,8 @@ rule orthofinder:
         genome_faa = expand(config["results_dir"] + "/orthology/orthofinder/orthof_{{annotation}}/orthof_{{annotation}}_faa/{genome}.faa", genome=GENOMES),
         query_faa = expand(config["results_dir"] + "/orthology/orthofinder/orthof_{{annotation}}/orthof_{{annotation}}_faa/{query}.faa", query=QUERIES),
     output:
-        genecount_ortholog_n0 = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.GeneCount.FromN0PhylogeneticHierarchical.tsv",
         genecount_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.GeneCount.tsv",
-        genelist_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.FromN0PhylogeneticHierarchical.tsv",
+        genelist_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.tsv",
     params:
         outdir = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/Orthofinder/",
         resdir= config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/",
@@ -787,48 +786,6 @@ rule orthofinder:
         orthofinder -f {params.dir_faa} -M msa -T {params.orthofinder_method} -o {params.outdir} -n {params.tempo} -t {threads} &>> {log}
         mkdir -p {params.resdir}
         mv {params.outdir}/Results_{params.tempo}/Orthogroups/* {params.resdir}
-        awk -F "\\t" '{{
-            if(NR!=1){{
-                if (!($2 in seen)){{
-                    seen[$2] = 1
-                    order[++count] = $2
-                }}
-                for(i=4;i<=NF;i++){{
-                    n=split($i,a," ")
-                    gsub(/, /," ",$i)
-                    dOG2sum[$2][i]+=n
-                    if(dOG2gene[$2][i] == ""){{
-                        dOG2gene[$2][i]=$i
-                    }}else{{
-                        dOG2gene[$2][i]=dOG2gene[$2][i]" "$i
-                    }}
-                }}
-            }}else{{
-                ncol=NF
-                header=$2
-                for(i=4;i<=NF;i++){{
-                    header=header"\\t"$i
-                }}
-                print header >"{output.genelist_ortholog}"
-                print header"\\tTotal" >"{output.genecount_ortholog_n0}"
-            }}
-        }}END{{
-            for(i = 1; i <= count; i++){{
-                total=0
-                toprintcount=order[i]
-                toprintgene=order[i]
-                for(j=4;j<=ncol;j++){{
-                    total+=dOG2sum[order[i]][j]
-                    toprintcount=toprintcount"\\t"dOG2sum[order[i]][j]
-                    toprintgene=toprintgene"\\t"dOG2gene[order[i]][j]
-                    if(j==ncol){{
-                        toprintcount=toprintcount"\\t"total
-                    }}
-                }}
-                print toprintcount >"{output.genecount_ortholog_n0}"
-                print toprintgene >"{output.genelist_ortholog}"
-            }}
-        }}' {params.outdir}/Results_{params.tempo}/Phylogenetic_Hierarchical_Orthogroups/N0.tsv
         """
 
 ### End to identify orthogroup
@@ -838,9 +795,8 @@ rule orthofinder:
 if config["orthogroup_gene"]=="ALL":        ## Version search orthogroup 1:1 in Query + Genome
     checkpoint select_ortholog:
         input:
-            genecount_ortholog_n0 = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.GeneCount.FromN0PhylogeneticHierarchical.tsv",
             genecount_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.GeneCount.tsv",
-            genelist_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.FromN0PhylogeneticHierarchical.tsv",
+            genelist_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.tsv",
         output:
             dir_og_fna = directory(config["results_dir"] + "/alignment/align_{annotation}/OG/Orthogroup_Sequences_fna/"),
             dir_og_faa = directory(config["results_dir"] + "/alignment/align_{annotation}/OG/Orthogroup_Sequences_faa/"),
@@ -932,7 +888,7 @@ if config["orthogroup_gene"]=="ALL":        ## Version search orthogroup 1:1 in 
                         print "No gene in queries ->\\t"$0 >"{params.res_dir}/GeneCount_NotKept_orthogroups.txt"
                     }}
                 }}
-            }}' {input.genecount_ortholog_n0} > {params.res_dir}/GeneCount_all_orthogroups_kept.txt
+            }}' {input.genecount_ortholog} > {params.res_dir}/GeneCount_all_orthogroups_kept.txt
             
             # Write all genome species in a file
             echo "{params.genome}" > {params.res_dir}/List_Genome.txt
@@ -951,7 +907,7 @@ if config["orthogroup_gene"]=="ALL":        ## Version search orthogroup 1:1 in 
             for OG in $(cat {output.oneparalog_sister})
             do
             ### Find sequence ID to remove (from paralogous species)
-            grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
+            grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' | sed 's/,$//' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
             ### Remove seqID
             awk '{{ if ((NR>1)&&($0~/^>/)) {{ printf("\\n%s", $0); }} else if (NR==1) {{ printf("%s", $0); }} else {{ printf("\\t%s", $0); }} }}' {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa | grep -v -Ff {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt - | tr "\\t" "\\n" > {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa
             done
@@ -965,9 +921,8 @@ if config["orthogroup_gene"]=="ALL":        ## Version search orthogroup 1:1 in 
 elif config["orthogroup_gene"]=="GENOME":        ## Version search orthogroup 1:1 in Genome only
     checkpoint select_ortholog:
         input:
-            genecount_ortholog_n0 = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.GeneCount.FromN0PhylogeneticHierarchical.tsv",
             genecount_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.GeneCount.tsv",
-            genelist_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.FromN0PhylogeneticHierarchical.tsv",
+            genelist_ortholog = config["results_dir"] + "/orthology/orthofinder/orthof_{annotation}/orthof_{annotation}_results/Orthogroups/Orthogroups.tsv",
         output:
             dir_og_fna = directory(config["results_dir"] + "/alignment/align_{annotation}/OG/Orthogroup_Sequences_fna/"),
             dir_og_faa = directory(config["results_dir"] + "/alignment/align_{annotation}/OG/Orthogroup_Sequences_faa/"),
@@ -1053,7 +1008,7 @@ elif config["orthogroup_gene"]=="GENOME":        ## Version search orthogroup 1:
                         print "No gene in queries ->\\t"$0 >"{params.res_dir}/GeneCount_NotKept_orthogroups.txt"
                     }}
                 }}
-            }}' {input.genecount_ortholog_n0} > {params.res_dir}/GeneCount_all_orthogroups_kept.txt
+            }}' {input.genecount_ortholog} > {params.res_dir}/GeneCount_all_orthogroups_kept.txt
             
             # Write all genome species in a file
             echo "{params.genome}" > {params.res_dir}/List_Genome.txt
@@ -1072,7 +1027,7 @@ elif config["orthogroup_gene"]=="GENOME":        ## Version search orthogroup 1:
             for OG in $(cat {output.oneparalog_sister})
             do
             ### Find sequence ID to remove (from paralogous species)
-            grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
+            grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' | sed 's/,$//' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
             ### Remove seqID
             awk '{{ if ((NR>1)&&($0~/^>/)) {{ printf("\\n%s", $0); }} else if (NR==1) {{ printf("%s", $0); }} else {{ printf("\\t%s", $0); }} }}' {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa | grep -v -Ff {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt - | tr "\\t" "\\n" > {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa
             done

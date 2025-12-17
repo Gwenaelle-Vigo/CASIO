@@ -25,7 +25,7 @@ echo -e "Downloading Miniprot and Scipio image :\n"
 wget https://data.indores.fr:443/api/access/datafile/31132 -O Container/Miniprot_Scipio/miniprot_scipio.sif
 echo -e "\n"
 echo -e "Downloading Orthology and cleaing tools image :\n"
-wget https://data.indores.fr:443/api/access/datafile/31131 -O Container/Cleaning/cleaning_orthology.sif
+wget https://data.indores.fr:443/api/access/datafile/31179 -O Container/Cleaning/cleaning_orthology.sif
 
 echo -e "\n"
 echo "Ensure that the apptainer image download was completed successfully."
@@ -54,7 +54,7 @@ echo "Now, if you will use Braker you have to download a orthoDB protein (https:
 echo -e "\n\n\n"
 echo "#################### Last things to do :"
 echo "- Download and put Genomes, queries and protein database like explain above."
-echo "- Install snakemake and apptainer."
+echo "- Install snakemake v8.20 minimum and apptainer."
 echo "- Configure the ${SCRIPT_DIR}/configparam.yaml file."
 echo "- Execute the workflow with optionaly --singularity-args to bind data and results if there are not in CASIO directory:"
 echo "snakemake -s CASIO.smk --configfile configparam.yaml -c {threads} --use-singularity (--singularity-args '-B /path/where/are/data -B /path/where/are/queries/ -B /path/where/are/protein_database -B /path/where/write/results/')"
