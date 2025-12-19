@@ -241,7 +241,7 @@ if "Braker" in ANNOTATIONS:
             max(int(workflow.cores / 5),1)
         params:
             output_dir=config["results_dir"] + "/annotation/Braker/TE_identification/{genome}/",
-            skip_masking=config["skip_masking_step"],
+            skip_masking=config["skip_masking_step"] if config["skip_masking_step"] != "" else "NoGenomeMask",
         log:
             config["results_dir"] + "/logs/annotation/Braker/TE_identification/{genome}/{genome}_RM.log"
         singularity:
@@ -273,7 +273,7 @@ if "Braker" in ANNOTATIONS:
             max(int(workflow.cores / 5),1)
         params:
             output_dir=config["results_dir"] + "/annotation/Braker/MASKING_genome/{genome}",
-            skip_masking=config["skip_masking_step"],
+            skip_masking=config["skip_masking_step"] if config["skip_masking_step"] != "" else "NoGenomeMask",
         log:
             config["results_dir"] + "/logs/annotation/Braker/MASKING_genome/{genome}/{genome}_RM.log",
         singularity:

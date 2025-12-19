@@ -2,7 +2,7 @@
 
 ### Define Directory for inputs and outputs
 
-# Directory with inside genomes to analyse at format Genus_species.fasta (Format must respect the case at Genus and must end by fasta). 
+# Directory with inside genomes to analyse at format Genus_species.fasta (Format must respect the case at Genus and must end by fasta. See Readme for more information). 
 # File must be uncompress
 assemblies_dir: "Data/Genome/"
 
@@ -16,9 +16,6 @@ protein_dir: "Data/Protein_Database/"
 
 # Directory where results will be write. The directory will be create automatically.
 results_dir: "Results/CASIO/"
-
-
-
 
 
 
@@ -38,16 +35,16 @@ skip_masking_step: "" # Data/Genome_already_mask.txt
 # Minimum length (in bp) of Contigs/Chromosomes in species/genome to annotate. This avoid bugs on too fragmented genome by removing short contigs/chromosomes of the fasta genome set in assemblies_dir.
 minLenContigs: 10000
 
-# Minimum length of annotate CDS (in bp). Shorter CDS will be filter
+# Minimum length of annotate CDS (in bp). Shorter CDS will be filter.
 minLenCDS: 30
 
-# The orthology dabase use by Busco.
+# The orthology dabase use by Busco. To obtain a list of dataset you can run apptainer run Container/Busco/Busco.sif busco --list-dataset
 lineage_dataset_busco: "papilionoidea_odb12"
 
-# Orthofinder define tree inference method
-orthofinder_method: "fasttree" # Possible option : fasttree, raxml, raxml-ng, iqtree
+# Orthofinder define tree inference method. We recommend FastTree for fast analysis, otherwise iqtree3.
+orthofinder_method: "iqtree3" # Possible option : fasttree, fasttree_fastest, raxml, iqtree3
 
-# Minimum number of species with orthologous genes 1:1. At the end of orthofinder only orthogroup with {min_sp_ortholog} species with 1 genes will be keep
+# Minimum number of species with orthologous genes 1:1. At the end of orthofinder only orthogroup with {min_sp_ortholog} species with 1 genes will be keep.
 min_sp_ortholog: 5 # Needs orthogroup with no paralog and orthologous gene in at least X species
 
 # Filter orthologous genes on : ALL (GENOME+QUERY) or GENOME only : Recommend ALL
