@@ -323,6 +323,7 @@ if "Braker" in ANNOTATIONS:
             gtf=config["results_dir"] + "/annotation/Braker/ANNOTATE_genome/{genome}/braker.gtf",
         params:
             output_dir=config["results_dir"] + "/annotation/Braker/ANNOTATE_genome/{genome}/",
+            minLenContigs = config["minLenContigs"],
             log_dir=config["results_dir"] + "/logs/annotation/Braker/ANNOTATE_genome/{genome}/",
         singularity:
             "docker://teambraker/braker3:latest"
@@ -340,7 +341,7 @@ if "Braker" in ANNOTATIONS:
             if [ -d "{params.output_dir}" ];then
                 rm -rf {params.output_dir}/*
             fi
-            braker.pl --genome={input.genome_mask} --prot_seq={input.proteins} --threads={threads} --workingdir={params.output_dir} --species={wildcards.genome} &>> {log}
+            braker.pl --genome={input.genome_mask} --prot_seq={input.proteins} --threads={threads} --workingdir={params.output_dir} --species={wildcards.genome} --min_contig={params.minLenContigs} &>> {log}
             cp {params.output_dir}/braker.log {params.log_dir}
             """
     rule braker_filter:
@@ -775,7 +776,7 @@ rule orthofinder:
     singularity:
         "Container/Cleaning/cleaning_orthology.sif"
     log:
-        config["results_dir"] + "/logs/orthology/orthofinder/orthof_{{annotation}}/{{annotation}}.log"
+        config["results_dir"] + "/logs/orthology/orthofinder/orthof_{annotation}/{annotation}.log"
     shell:
         """
         rm -f /tmp/test.ckp.gz
@@ -1135,7 +1136,7 @@ rule iqtree:
         config["results_dir"] + "/logs/cleaning/phylter_{annotation}/alignment_phylter_{annotation}/{og_filter}_phylter/{og_filter}_iqtree.log"
     shell:
         """
-        iqtree2 -m GTR+G4 -s {input.og_filter} -T {threads} &>> {log}
+        iqtree -m GTR+G4 -s {input.og_filter} -T {threads} &>> {log}
         """
 
 

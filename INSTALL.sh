@@ -25,7 +25,7 @@ echo -e "Downloading Miniprot and Scipio image :\n"
 wget https://data.indores.fr:443/api/access/datafile/31132 -O Container/Miniprot_Scipio/miniprot_scipio.sif
 echo -e "\n"
 echo -e "Downloading Orthology and cleaing tools image :\n"
-wget https://data.indores.fr:443/api/access/datafile/31179 -O Container/Cleaning/cleaning_orthology.sif
+wget https://data.indores.fr:443/api/access/datafile/31368 -O Container/Cleaning/cleaning_orthology.sif
 
 echo -e "\n"
 echo "Ensure that the apptainer image download was completed successfully."
