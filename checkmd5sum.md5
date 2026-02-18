@@ -1,4 +1,5 @@
 221a0477eea46902a7d8e330347beb93  Container/Braker/repeatM.sif
 152995a812e79bd6dc98db25ad719488  Container/Busco/Busco.sif
 b832a8227ff611ebdc327219732573be  Container/Miniprot_Scipio/miniprot_scipio.sif
-094cab83c1fc1f80fafb8ac8d0a9fa5d  Container/Cleaning/cleaning_orthology.sif
+b862b66f5b97935bcfcca66972d818e5  Container/Cleaning/cleaning_orthology.sif
+33c147025e9eb9384f0d3052f48636fb  DatasetTest.tar.gz

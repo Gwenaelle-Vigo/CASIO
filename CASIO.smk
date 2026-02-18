@@ -133,10 +133,10 @@ rule generate_queries:
         awk '/^>/ {{printf("\\n%s\\n",$0);next; }} {{ printf("%s",$0);}}  END {{printf("\\n");}}' {params.output_dir}/{wildcards.query}_tmp.faa |tail -n +2 | paste - - | awk -F "\\t" '{{if($2 !~ /\\*[A-Z*]/){{sub(/\\*$/, "", $2); print $1"\\t"$2}}}}' | tr "\\t" "\\n" > {output.query_faa}
         sed -i 's/_1$//' {output.query_faa}
         
-        grep "^>" {output.query_faa} | sed 's/^>//' | sort > {params.output_dir}/list_transcript.txt
-        seqkit grep -f {params.output_dir}/list_transcript.txt {params.output_dir}/{wildcards.query}_tmp.fna -w 0 -o {output.query_fna} &>> {log}
+        grep "^>" {output.query_faa} | sed 's/^>//' | sort > {params.output_dir}/list_transcript_{wildcards.query}.txt
+        seqkit grep -f {params.output_dir}/list_transcript_{wildcards.query}.txt {params.output_dir}/{wildcards.query}_tmp.fna -w 0 -o {output.query_fna} &>> {log}
         
-        rm {params.output_dir}/list_transcript.txt {params.output_dir}/{wildcards.query}_tmp.fna {params.output_dir}/{wildcards.query}_tmp.faa
+        rm {params.output_dir}/list_transcript_{wildcards.query}.txt {params.output_dir}/{wildcards.query}_tmp.fna {params.output_dir}/{wildcards.query}_tmp.faa
         """
 
 rule prepare_genome:
@@ -891,26 +891,35 @@ if config["orthogroup_gene"]=="ALL":        ## Version search orthogroup 1:1 in 
                 }}
             }}' {input.genecount_ortholog} > {params.res_dir}/GeneCount_all_orthogroups_kept.txt
             
-            # Write all genome species in a file
-            echo "{params.genome}" > {params.res_dir}/List_Genome.txt
-            python scripts/SelectOrthogroupNamesOneParalogSister.py {output.oneparalog} {params.orthof_dir}/Results_{params.tempo}/Resolved_Gene_Trees {params.res_dir}/List_Genome.txt > {output.oneparalog_sister}
-            
-            
             # Write nucleotidic and proteic sequence of kept orthogroup.
             mkdir -p {params.res_dir}/OG/Orthogroup_Sequences_faa/
+            
+            # Write all genome species in a file
+            echo "{params.genome}" > {params.res_dir}/List_Genome.txt
+            if [ -f "{output.oneparalog}" ]; then
+                python scripts/SelectOrthogroupNamesOneParalogSister.py {output.oneparalog} {params.orthof_dir}/Results_{params.tempo}/Resolved_Gene_Trees {params.res_dir}/List_Genome.txt > {output.oneparalog_sister}
+                if [ -s "{output.oneparalog_sister}" ]; then
+                    for OG in $(cat {output.oneparalog_sister})
+                    do
+                        ### Find sequence ID to remove (from paralogous species)
+                        grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' | sed 's/,$//' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
+                        ### Remove seqID
+                        awk '{{ if ((NR>1)&&($0~/^>/)) {{ printf("\\n%s", $0); }} else if (NR==1) {{ printf("%s", $0); }} else {{ printf("\\t%s", $0); }} }}' {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa | grep -v -Ff {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt - | tr "\\t" "\\n" > {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa
+                    done
+                else
+                    touch {output.oneparalog_sister}
+                fi
+            else
+                touch {output.oneparalog}
+                touch {output.oneparalog_sister}
+            fi
+            
+            
             
             # Keep all OG sequence in one directory
             for OG in $(cat {output.noparalog})
             do 
             ln -sr {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa; 
-            done
-            
-            for OG in $(cat {output.oneparalog_sister})
-            do
-            ### Find sequence ID to remove (from paralogous species)
-            grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' | sed 's/,$//' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
-            ### Remove seqID
-            awk '{{ if ((NR>1)&&($0~/^>/)) {{ printf("\\n%s", $0); }} else if (NR==1) {{ printf("%s", $0); }} else {{ printf("\\t%s", $0); }} }}' {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa | grep -v -Ff {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt - | tr "\\t" "\\n" > {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa
             done
             
             mkdir -p {params.res_dir}/OG/Orthogroup_Sequences_fna/
@@ -1011,26 +1020,33 @@ elif config["orthogroup_gene"]=="GENOME":        ## Version search orthogroup 1:
                 }}
             }}' {input.genecount_ortholog} > {params.res_dir}/GeneCount_all_orthogroups_kept.txt
             
-            # Write all genome species in a file
-            echo "{params.genome}" > {params.res_dir}/List_Genome.txt
-            python scripts/SelectOrthogroupNamesOneParalogSister.py {output.oneparalog} {params.orthof_dir}/Results_{params.tempo}/Resolved_Gene_Trees {params.res_dir}/List_Genome.txt > {output.oneparalog_sister}
-            
-            
             # Write nucleotidic and proteic sequence of kept orthogroup.
             mkdir -p {params.res_dir}/OG/Orthogroup_Sequences_faa/
+            
+            # Write all genome species in a file
+            echo "{params.genome}" > {params.res_dir}/List_Genome.txt
+            if [ -f "{output.oneparalog}" ]; then
+                python scripts/SelectOrthogroupNamesOneParalogSister.py {output.oneparalog} {params.orthof_dir}/Results_{params.tempo}/Resolved_Gene_Trees {params.res_dir}/List_Genome.txt > {output.oneparalog_sister}
+                if [ -s "{output.oneparalog_sister}" ]; then
+                    for OG in $(cat {output.oneparalog_sister})
+                    do
+                        ### Find sequence ID to remove (from paralogous species)
+                        grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' | sed 's/,$//' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
+                        ### Remove seqID
+                        awk '{{ if ((NR>1)&&($0~/^>/)) {{ printf("\\n%s", $0); }} else if (NR==1) {{ printf("%s", $0); }} else {{ printf("\\t%s", $0); }} }}' {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa | grep -v -Ff {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt - | tr "\\t" "\\n" > {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa
+                    done
+                else
+                    touch {output.oneparalog_sister}
+                fi
+            else
+                touch {output.oneparalog}
+                touch {output.oneparalog_sister}
+            fi
             
             # Keep all OG sequence in one directory
             for OG in $(cat {output.noparalog})
             do 
             ln -sr {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa; 
-            done
-            
-            for OG in $(cat {output.oneparalog_sister})
-            do
-            ### Find sequence ID to remove (from paralogous species)
-            grep $OG {input.genelist_ortholog} | awk -F "\\t" '{{for(i=2;i<=NF;i++){{n=split($i,a," ");if(n>1){{for(j=1;j<=n;j++){{print a[j]}}}}}}}}' | sed 's/,$//' > {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt
-            ### Remove seqID
-            awk '{{ if ((NR>1)&&($0~/^>/)) {{ printf("\\n%s", $0); }} else if (NR==1) {{ printf("%s", $0); }} else {{ printf("\\t%s", $0); }} }}' {params.orthof_dir}/Results_{params.tempo}/Orthogroup_Sequences/${{OG}}.fa | grep -v -Ff {params.orthof_dir}/Results_{params.tempo}/pattern_${{OG}}.txt - | tr "\\t" "\\n" > {params.res_dir}/OG/Orthogroup_Sequences_faa/${{OG}}.faa
             done
             
             mkdir -p {params.res_dir}/OG/Orthogroup_Sequences_fna/
@@ -1170,24 +1186,26 @@ rule phylter:
                 echo "$t" | awk -F "/" '{{print $(NF-1)}}' | sed 's/_phylter//' >> {output.list_tre}
             fi
         done
-        Rscript scripts/Script_PhylteR.r {output.tre} {output.list_tre} {output.phylter} &>> {log}
-        
-        # Then create for each OG the list of species outliers
-        # END write OG with all the identified outlier.
-        awk -F "\\t" '{{
-            if($0 !~ /^#/){{
-                if($1 in og2outlier){{
-                    og2outlier[$1]=og2outlier[$1]"|"$2
-                }}else{{
-                    og2outlier[$1]=$2
+        if [ $(wc -l {output.list_tre} | cut -d " " -f 1) -gt 1 ]; then
+            Rscript scripts/Script_PhylteR.r {output.tre} {output.list_tre} {output.phylter} &>> {log}
+            # Then create for each OG the list of species outliers
+            # END write OG with all the identified outlier.
+            awk -F "\\t" '{{
+                if($0 !~ /^#/){{
+                    if($1 in og2outlier){{
+                        og2outlier[$1]=og2outlier[$1]"|"$2
+                    }}else{{
+                        og2outlier[$1]=$2
+                    }}
                 }}
-            }}
-        }}END{{
-            for(o in og2outlier){{
-                print o"\\t"og2outlier[o]
-            }}
-        }}' {output.phylter} > {output.phylter_outlier}
-        
+            }}END{{
+                for(o in og2outlier){{
+                    print o"\\t"og2outlier[o]
+                }}
+            }}' {output.phylter} > {output.phylter_outlier}
+        else
+            touch {output.phylter} {output.phylter_outlier}
+        fi
         """
 
 
@@ -1346,18 +1364,20 @@ rule rerun_filt_omm_macse:
         "Write in directory for comparison only AA and NT alignments that pass filter after omm_macse"
     shell:
         """
-        for d in {input}
-        do
-            nb_file=$(ls $d | wc -l)
-            if [ "$nb_file" -ge 10 ]; then
-                orthogroup=$(echo $d | awk -F "/" '{{print $NF}}' | sed 's/_macse//')
-                if [ $(grep -c "^>" ${{d}}/${{orthogroup}}_macse_final_mask_align_NT.aln) -ge 3 ]; then
-                    cp ${{d}}/${{orthogroup}}_macse_final_mask_align_NT.aln {params.comparison_dir}/NT/${{orthogroup}}_macse_final_mask_align_NT_pruned_complet.aln
-                    cp ${{d}}/${{orthogroup}}_macse_final_unmask_align_AA.aln {params.comparison_dir}/AA/${{orthogroup}}_macse_final_unmask_align_AA_pruned_complet.aln
-                    echo "$orthogroup" >> {output.list_OG_rerun};
+        if [ "{input}" != "" ]; then
+            for d in {input}
+            do
+                nb_file=$(ls $d | wc -l)
+                if [ "$nb_file" -ge 10 ]; then
+                    orthogroup=$(echo $d | awk -F "/" '{{print $NF}}' | sed 's/_macse//')
+                    if [ $(grep -c "^>" ${{d}}/${{orthogroup}}_macse_final_mask_align_NT.aln) -ge 3 ]; then
+                        cp ${{d}}/${{orthogroup}}_macse_final_mask_align_NT.aln {params.comparison_dir}/NT/${{orthogroup}}_macse_final_mask_align_NT_pruned_complet.aln
+                        cp ${{d}}/${{orthogroup}}_macse_final_unmask_align_AA.aln {params.comparison_dir}/AA/${{orthogroup}}_macse_final_unmask_align_AA_pruned_complet.aln
+                        echo "$orthogroup" >> {output.list_OG_rerun};
+                    fi
                 fi
-            fi
-        done
+            done
+        fi
         # If checkpoint as 0 results what happen -> to test
         if [ ! -f {output.list_OG_rerun} ]; then
             touch {output.list_OG_rerun}
@@ -1393,22 +1413,20 @@ checkpoint comparison_remove_gene:
         cnt=$((cnt + 1));
         header+="\\t$a"
         if [[ $cnt -eq 1 ]]; then
-            grep -E "$pattern" {params.output_dir}/comparison_${{a}}/NT/*.aln | awk -F ":" '{{sub(/^>/,"", $2);sub(/_macse_final_mask_align_NT_pruned_complet.aln$/,"", $1); n=split($1,a,"/"); print $2"\\t"a[n]}}' | sort -t $'\\t' -k1,1 > {params.output_dir}/join.tmp
-        elif [[ $cnt -eq 2 ]]; then
-            join -t $'\\t' -a 1 -a 2 -e X -o auto <(cat {params.output_dir}/join.tmp | sort -t $'\\t' -k1,1) <(grep -E "$pattern" {params.output_dir}/comparison_${{a}}/NT/*.aln | awk -F ":" '{{sub(/^>/,"", $2);sub(/_macse_final_mask_align_NT_pruned_complet.aln$/,"", $1); n=split($1,a,"/"); print $2"\\t"a[n]}}' | sort -t $'\\t' -k1,1) > {output.full_table}
-            rm {params.output_dir}/join.tmp
+            grep -E -H "$pattern" {params.output_dir}/comparison_${{a}}/NT/*.aln | awk -F ":" '{{sub(/^>/,"", $2);sub(/_macse_final_mask_align_NT_pruned_complet.aln$/,"", $1); n=split($1,a,"/"); print $2"\\t"a[n]}}' | sort -t $'\\t' -k1,1 > {output.full_table}
         else
-            join -t $'\\t' -a 1 -a 2 -e X -o auto <(cat {output.full_table} | sort -t $'\\t' -k1,1) <(grep -E "$pattern" {params.output_dir}/comparison_${{a}}/NT/*.aln | awk -F ":" '{{sub(/^>/,"", $2);sub(/_macse_final_mask_align_NT_pruned_complet.aln$/,"", $1); n=split($1,a,"/"); print $2"\\t"a[n]}}' | sort -t $'\\t' -k1,1) > {params.output_dir}/join.tmp
+            join -t $'\\t' -a 1 -a 2 -e X -o auto <(cat {output.full_table} | sort -t $'\\t' -k1,1) <(grep -E -H "$pattern" {params.output_dir}/comparison_${{a}}/NT/*.aln | awk -F ":" '{{sub(/^>/,"", $2);sub(/_macse_final_mask_align_NT_pruned_complet.aln$/,"", $1); n=split($1,a,"/"); print $2"\\t"a[n]}}' | sort -t $'\\t' -k1,1) > {params.output_dir}/join.tmp
             rm {output.full_table}
             mv {params.output_dir}/join.tmp {output.full_table}
         fi
         done
         
         sed -i -E "1s/^/$header\\n/" {output.full_table}
+        
         python scripts/Comparison_annotation.py {output.full_table} {params.output_dir}
         
         mkdir -p {output.profile_dir}
-        while read newname tools og queries nqueries status
+        while read newname tools og queries nqueries format
         do
             tokeep=$(echo $og |cut -d "|" -f 1);
             tool_tokeep=$(echo $tokeep | cut -d "_" -f 1)

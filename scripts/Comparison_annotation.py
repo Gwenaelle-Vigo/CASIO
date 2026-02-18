@@ -8,6 +8,7 @@ import itertools
 import re
 from collections import defaultdict
 from plotly_upset.plotting import plot_upset
+import plotly.graph_objects as go
 
 
 # Make graph with node (Tool_OG) and edge (find associate with an other Tool_OG)
@@ -182,20 +183,28 @@ with open(sys.argv[2]+"/NewListGene_OG_GroupByAnnotationTools.tsv",'a') as fo:
 fo.close()
 
 
-fig = plot_upset(
-    dataframes=[df_upset],
-    legendgroups=["OGs"],
-    marker_size=16,
-    exclude_zeros=True,
-    sorted_x="d",
-    sorted_y="a",
-)
+if len(df_upset.columns) > 1:
+    fig = plot_upset(
+        dataframes=[df_upset],
+        legendgroups=["OGs"],
+        marker_size=16,
+        exclude_zeros=True,
+        sorted_x="d",
+        sorted_y="a",
+    )
+else:
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=[df_upset.columns[0]],
+                y=[len(df_upset)],
+                name="OGs"
+            )
+        ]
+    )
+
 
 fig.write_image(sys.argv[2]+ "/UpsetPlot_OG_AnnotationTools.png")
-
-
-
-
 
 
 

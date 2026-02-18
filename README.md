@@ -24,15 +24,22 @@ cd /path/to/your/desired/directory
 git clone https://github.com/Gwenaelle-Vigo/CASIO
 cd CASIO
 ```
-2. Run INSTALL.sh to download apptainer image and configure repository. (Needs wget and md5sum installed)
+2. Run INSTALL.sh to download apptainer image, test dataset and to configure repository. (Needs wget and md5sum installed)
 ```bash
 bash INSTALL.sh
 ```
 3. Install [snakemake](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) (minimum version 8.20)
 4. Install [apptainer](https://apptainer.org/docs/admin/main/installation.html)
+5. Test the workflow
+```bash
+## Activate snakemake env and run workflow
+# -c {integer} represent the maximum number of threads to use
+snakemake -s CASIO.smk --configfile configparam_DatasetTest.yaml -p -c 12 --use-singularity
+# Results of the test are write in TestResults/
+```
 
 
-Once completed, the pipeline can be launched by editing the configuration file, setting input files and running Snakemake as described in the **Usage** section.
+Once completed, the pipeline can be launched by editing the configuration file (configparam.yaml), setting input files and running Snakemake as described in the **Usage** section.
 
 
 ------------------------------------------------------------------------
@@ -119,6 +126,8 @@ CASIO is distributed as a containerized Snakemake workflow. All software depende
 - Flynn JM et al. 2020. RepeatModeler2 for automated genomic discovery of transposable element families. Proc. Natl. Acad. Sci. U. S. A. 117:9451–9457. doi: 10.1073/pnas.1921046117. 
 
 - Keller O, Odronitz F, Stanke M, Kollmar M, Waack S. 2008. Scipio: Using protein sequences to determine the precise exon/intron structures of genes and their orthologs in closely related species. BMC Bioinformatics. 9:278. doi: 10.1186/1471-2105-9-278.
+
+- A. Lex, N. Gehlenborg, H. Strobelt, R. Vuillemot and H. Pfister, "UpSet: Visualization of Intersecting Sets," in IEEE Transactions on Visualization and Computer Graphics, vol. 20, no. 12, pp. 1983-1992, 31 Dec. 2014, doi: 10.1109/TVCG.2014.2346248.
 
 - Li H. 2023. Protein-to-genome alignment with miniprot. Bioinforma. Oxf. Engl. 39:btad014. doi: 10.1093/bioinformatics/btad014.
 

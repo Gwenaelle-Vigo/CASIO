@@ -25,11 +25,26 @@ echo -e "Downloading Miniprot and Scipio image :\n"
 wget https://data.indores.fr:443/api/access/datafile/31132 -O Container/Miniprot_Scipio/miniprot_scipio.sif
 echo -e "\n"
 echo -e "Downloading Orthology and cleaing tools image :\n"
-wget https://data.indores.fr:443/api/access/datafile/31368 -O Container/Cleaning/cleaning_orthology.sif
+wget https://data.indores.fr:443/api/access/datafile/31927 -O Container/Cleaning/cleaning_orthology.sif
+
+echo "Download test dataset to test and verify the workflow :"
+echo -e "\n"
+echo -e "Downloading test dataset archive :\n"
+wget https://data.indores.fr:443/api/access/datafile/31928 -O DatasetTest.tar.gz
 
 echo -e "\n"
-echo "Ensure that the apptainer image download was completed successfully."
+echo "Ensure that the apptainer image and test dataset archive downloads were completed successfully."
 md5sum -c checkmd5sum.md5
+echo -e "\n\n\n"
+
+echo "#################### Prepare test dataset to test CASIO pipeline :"
+echo "Extracting archive :"
+tar -xvzf DatasetTest.tar.gz
+mv DatasetTest/configparam_DatasetTest.yaml $SCRIPT_DIR
+sed -i 's/Results\//TestResults\//' $SCRIPT_DIR/configparam_DatasetTest.yaml
+echo -e "\n"
+echo -e "Now, you can test the installation and the workflow by running (need snakemake and apptainer install):\n"
+echo "snakemake -s CASIO.smk --configfile configparam_DatasetTest.yaml -p -c 1 --use-singularity"
 echo -e "\n\n\n"
 
 echo "#################### Prepare working directory for CASIO pipeline :"
@@ -59,5 +74,7 @@ echo "- Configure the ${SCRIPT_DIR}/configparam.yaml file."
 echo "- Execute the workflow with optionaly --singularity-args to bind data and results if there are not in CASIO directory:"
 echo "snakemake -s CASIO.smk --configfile configparam.yaml -c {threads} --use-singularity (--singularity-args '-B /path/where/are/data -B /path/where/are/queries/ -B /path/where/are/protein_database -B /path/where/write/results/')"
 
-
-
+echo -e "\n\n\n"
+echo "#################### To run a test :"
+echo "- If snakemake v8.20 minimum and apptainer are installed, you can test the installation and the CASIO workflow by running :"
+echo "snakemake -s CASIO.smk --configfile configparam_DatasetTest.yaml -p -c 1 --use-singularity"
